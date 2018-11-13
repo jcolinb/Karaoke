@@ -15,11 +15,11 @@ const writeResponse = R.curry((responseType,res,page) => {
     res.end();
 });
 
-const unHump = (str) => str.replace('_',' ');
+const unsnake = (str) => str.replace('_',' ');
 
 const parseQuery = ({url}) => parse(url,true);
 
-const pullFields = ({query}) => [unHump(query.term),query.field];
+const pullFields = ({query}) => [unsnake(query.term),query.field];
 
 const parseResponseType = ({url}) => 
     /(.html)$/.test(url) && 'html' ||
