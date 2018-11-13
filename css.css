@@ -1,0 +1,35 @@
+main {
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    background-color: grey;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#error {
+    font-size: 2em;
+    font-color: red;
+}
+
+li {
+    list-style-type: none;
+    background-color: green;
+    color: grey;
+    padding: 3px;
+    margin: 5px;
+    border-radius: 3px;
+    font-size: 1.5 em;
+}
+
+li span {
+    color: yellow;
+}
+
+#search-bar {
+    width: 33%;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+}

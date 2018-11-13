@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css.css">
+    <title>Kareoke</title>
+    <script src="node_modules/ramda/dist/ramda.js"></script>
+  </head>
+  <body>
+    <main>
+      <div id="search-bar">
+	<input id="search-term"  type="text" placeholder="search"/>
+	<select id="search-field">
+	  <option value="artist">search by</option>
+	  <option value="artist">Artist</option>
+	  <option value="title">Song</option>
+	</select>
+	<button id="submit">search</button>
+      </div>
+      <ul id="results"></ul>
+    </main>
+    <script src="kareoke-interface.js"></script>
+  </body>
+</html>

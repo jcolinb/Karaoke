@@ -1,0 +1,14 @@
+{
+  "name": "kareoke",
+  "version": "1.0.0",
+  "description": "server and web interface for kareoke app",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "author": "Gateless",
+  "license": "ISC",
+  "dependencies": {
+    "ramda": "^0.25.0"
+  }
+}
