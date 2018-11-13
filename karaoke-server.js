@@ -27,7 +27,7 @@ const parseResponseType = ({url}) =>
     /(.js)$/.test(url) && 'javascript' ||
       'plain';
 
-const searchFiles = ([term,field]) => (field === 'artist') ? sh(`ls ./HardDrive/Songs | grep -i -e '${term}.*-'`) : sh(`ls ./HardDrive/Songs | grep -i -e '-.*${term}'`) ;
+const searchFiles = ([term,field]) => (field === 'artist') ? sh(`ls ./HardDrive/Songs | grep -i -m 15 -e '${term}.*-.*\.mp3'`) : sh(`ls ./HardDrive/Songs | grep -i -m 15 -e '-.*${term}.*\.mp3'`) ;
 
 const searchArtist = R.compose(searchFiles,pullFields,parseQuery);
 
