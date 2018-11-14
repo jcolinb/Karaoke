@@ -6,19 +6,13 @@ const {parse} = require('url');
 const os = require('os');
 
 const first = (arr) => arr[0];
-
 const pluck = R.curry((key,arr) => arr.map((obj) => obj[key]));
-
 const values = (obj) => Object.values(obj);
-
 const filter4vPI = (arr) => arr.filter((val) => val.family == 'IPv4' && val.internal == false); 
-
 const flatten = (arr) => arr.reduce((acc,cur) => acc.concat(cur));
-
 const getIP = R.compose(first,pluck('address'),filter4vPI,flatten,values);
 
 const readFile = ({url}) => new Promise((resolve,reject) => {fs.readFile(`.${url}`,(err,data) => {(err) ? reject(err) : resolve(data)})});
-
 const sh = (cmd) => new Promise((resolve,reject) => {exec(cmd,(err,stdout,stderr) => (err) ? reject(stderr) : resolve(stdout))});
 
 const writeResponse = R.curry((responseType,res,page) => {
@@ -28,11 +22,11 @@ const writeResponse = R.curry((responseType,res,page) => {
     res.end();
 });
 
-const unsnake = (str) => str.replace('_',' ');
+const un_snake = (str) => str.replace('_',' ');
 
 const parseQuery = ({url}) => parse(url,true);
 
-const pullFields = ({query}) => [unsnake(query.term),query.field];
+const pullFields = ({query}) => [un_snake(query.term),query.field];
 
 const parseResponseType = ({url}) => 
     /(.html)$/.test(url) && 'html' ||
@@ -40,11 +34,13 @@ const parseResponseType = ({url}) =>
     /(.js)$/.test(url) && 'javascript' ||
       'plain';
 
-const searchFiles = ([term,field]) => (field === 'artist') ? sh(`ls ./HardDrive/Songs | grep -i -m 15 -e '${term}.*-.*\.mp3'`) : sh(`ls ./HardDrive/Songs | grep -i -m 15 -e '-.*${term}.*\.mp3'`) ;
+const respond = R.compose(writeResponse,parseResponseType);
+
+const searchFiles = ([term,field]) => (field === 'artist') ?
+      sh(`ls ./HardDrive/Songs | grep -i -m 15 -e '${term}.*-.*\.mp3'`) :
+      sh(`ls ./HardDrive/Songs | grep -i -m 15 -e '-.*${term}.*\.mp3'`);
 
 const searchArtist = R.compose(searchFiles,pullFields,parseQuery);
-
-const respond = R.compose(writeResponse,parseResponseType);
 
 const ip = getIP(os.networkInterfaces());
 const port = 3000
@@ -61,6 +57,7 @@ const server = http.createServer((req,res) => {
 	    delayResponse().then(() => writeResponse('plain',res,'your turn!'));
 	}
 	else {
+	    if (req.url == '/') {req.url = '/index.html'}
 	    readFile(req)
 		.then(respond(req)(res))
 		.catch(({message}) => writeResponse('html',res,
