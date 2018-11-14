@@ -3,6 +3,19 @@ const R = require('ramda');
 const fs = require('fs');
 const {exec} = require('child_process');
 const {parse} = require('url');
+const os = require('os');
+
+const first = (arr) => arr[0];
+
+const pluck = R.curry((key,arr) => arr.map((obj) => obj[key]));
+
+const values = (obj) => Object.values(obj);
+
+const filter4vPI = (arr) => arr.filter((val) => val.family == 'IPv4' && val.internal == false); 
+
+const flatten = (arr) => arr.reduce((acc,cur) => acc.concat(cur));
+
+const getIP = R.compose(first,pluck('address'),filter4vPI,flatten,values);
 
 const readFile = ({url}) => new Promise((resolve,reject) => {fs.readFile(`.${url}`,(err,data) => {(err) ? reject(err) : resolve(data)})});
 
@@ -33,7 +46,8 @@ const searchArtist = R.compose(searchFiles,pullFields,parseQuery);
 
 const respond = R.compose(writeResponse,parseResponseType);
 
-const delayResponse = () => new Promise((resolve,reject) => {setTimeout(resolve,10000);});
+const ip = getIP(os.networkInterfaces());
+const port = 3000
 
 const server = http.createServer((req,res) => {
 
@@ -64,4 +78,4 @@ const server = http.createServer((req,res) => {
 	}
     }
 });
-server.listen(3000, () => {console.log('server running...');});
+server.listen(port, () => {console.log(`server running at ${ip}:${port}`);});
