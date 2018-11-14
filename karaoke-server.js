@@ -4,6 +4,7 @@ const fs = require('fs');
 const {exec} = require('child_process');
 const {parse} = require('url');
 const os = require('os');
+const pykaraoke = require('./pykaraoke-service');
 
 const first = (arr) => arr[0];
 const pluck = R.curry((key,arr) => arr.map((obj) => obj[key]));
@@ -42,8 +43,14 @@ const searchFiles = ([term,field]) => (field === 'artist') ?
 
 const searchArtist = R.compose(searchFiles,pullFields,parseQuery);
 
+const playSong = (song) => sh(`pykaraoke /HardDrive/Songs/${song}`).then(() => host.hermes.publish('next',host.songList));
+
 const ip = getIP(os.networkInterfaces());
-const port = 3000
+const port = 3000;
+
+const host = new pykaraoke.Host();
+host.hermes = new pykaraoke.Hermes();
+host.hermes.subscribe('next',playSong);
 
 const server = http.createServer((req,res) => {
 
