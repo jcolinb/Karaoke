@@ -9,10 +9,3 @@ exports.Hermes = function () {
 	});
     };
 };
-    
-exports.Host = function () {
-    this.songList = [];
-    this.signUp = function (arr) {this.songList.push(arr);};
-};
-
-

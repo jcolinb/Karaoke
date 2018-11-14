@@ -4,7 +4,7 @@ const fs = require('fs');
 const {exec} = require('child_process');
 const {parse} = require('url');
 const os = require('os');
-const pykaraoke = require('./pykaraoke-service');
+const hermes = require('./pykaraoke-service');
 
 const first = (arr) => arr[0];
 const pluck = R.curry((key,arr) => arr.map((obj) => obj[key]));
@@ -43,19 +43,21 @@ const searchFiles = ([term,field]) => (field === 'artist') ?
 
 const searchArtist = R.compose(searchFiles,pullFields,parseQuery);
 
-const playSong = ([song,...rest]) => sh(`pykaraoke /HardDrive/Songs/${song}`).then(() =>
-										   {
-										       host.songList = rest;
-										       host.hermes.publish('next',host.songList);
-										   }
-										  );
+function playSong ([song,...rest]) {
+    host.hermes.publish('update',rest);
+    sh(`pykaraoke /HardDrive/Songs/${song}`)
+	.then(function () { host.hermes.publish('next',rest); });
+}
+function updateList = R.curry(function (song,list) {list.push(song);}); 
 
 const ip = getIP(os.networkInterfaces());
 const port = 3000;
 
-const host = new pykaraoke.Host();
-host.hermes = new pykaraoke.Hermes();
+const host = {};
+host.hermes = new hermes.Hermes();
+host.signUp = function (song) {host.hermes.subscribe('update',updateList(song));};
 host.hermes.subscribe('next',playSong);
+
 
 const server = http.createServer((req,res) => {
 
@@ -66,7 +68,7 @@ const server = http.createServer((req,res) => {
 		.catch((err) => writeResponse('plain',res,'No Results'));	
 	}
 	else if (/\/signup.*/.test(req.url)) {
-	    delayResponse().then(() => writeResponse('plain',res,'your turn!'));
+	    host.hermes.publish(next,[]);
 	}
 	else {
 	    if (req.url == '/') {req.url = '/index.html'}
