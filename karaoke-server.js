@@ -4,7 +4,7 @@ const fs = require('fs');
 const {exec} = require('child_process');
 const {parse} = require('url');
 const os = require('os');
-const hermes = require('./pykaraoke-service');
+const hermes = require('./hermes');
 
 const first = (arr) => arr[0];
 const pluck = R.curry((key,arr) => arr.map((obj) => obj[key]));
@@ -44,11 +44,13 @@ const searchFiles = ([term,field]) => (field === 'artist') ?
 const searchArtist = R.compose(searchFiles,pullFields,parseQuery);
 
 function playSong ([song,...rest]) {
+    console.log(`${song}`);
     host.hermes.publish('update',rest);
-    sh(`pykaraoke /HardDrive/Songs/${song}`)
-	.then(function () { host.hermes.publish('next',rest); });
+    sh(`pykaraoke ./HardDrive/Songs/${song}`)
+	.then(function (err,stdout,stderr) { console.log(`${err}`);host.hermes.publish('next',rest); })
+	.catch((err) => console.log(err));
 }
-function updateList = R.curry(function (song,list) {list.push(song);}); 
+const updateList = R.curry(function (song,list) {list.push(song);}); 
 
 const ip = getIP(os.networkInterfaces());
 const port = 3000;
@@ -68,7 +70,8 @@ const server = http.createServer((req,res) => {
 		.catch((err) => writeResponse('plain',res,'No Results'));	
 	}
 	else if (/\/signup.*/.test(req.url)) {
-	    host.hermes.publish(next,[]);
+	    console.log('recieved');
+	    host.hermes.publish('next',['ZZ\\ Ward\\ -\\ 365\\ Days\\ \\[SN\\ Karaoke\\].cdg']);
 	}
 	else {
 	    if (req.url == '/') {req.url = '/index.html'}
