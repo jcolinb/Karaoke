@@ -46,6 +46,7 @@ const searchArtist = R.compose(searchFiles,pullFields,parseQuery);
 function playSong ([song,...rest]) {
     console.log(`${song}`);
     host.hermes.publish('update',rest);
+    console.log(rest);
     sh(`pykaraoke ./HardDrive/Songs/${song}`)
 	.then(function (err,stdout,stderr) { console.log(`${err}`);host.hermes.publish('next',rest); })
 	.catch((err) => console.log(err));
@@ -71,7 +72,7 @@ const server = http.createServer((req,res) => {
 	}
 	else if (/\/signup.*/.test(req.url)) {
 	    console.log('recieved');
-	    host.hermes.publish('next',['ZZ\\ Ward\\ -\\ 365\\ Days\\ \\[SN\\ Karaoke\\].cdg']);
+	    host.hermes.publish('next',['ZZ\\ Ward\\ -\\ 365\\ Days\\ \\[SN\\ Karaoke\\].cdg','ZZ\\ Ward\\ -\\ 365\\ Days\\ \\[SN\\ Karaoke\\].cdg','ZZ\\ Ward\\ -\\ 365\\ Days\\ \\[SN\\ Karaoke\\].cdg']);
 	}
 	else {
 	    if (req.url == '/') {req.url = '/index.html'}
