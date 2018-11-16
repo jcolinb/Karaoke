@@ -68,7 +68,7 @@ const host = {};
 host.hermes = new hermes.Hermes();
 host.signUp = function (song) {host.hermes.subscribe('update',updateList(song));};
 host.hermes.subscribe('next',playSong);
-
+host.activeRound = false;
 
 const server = http.createServer((req,res) => {
 
@@ -79,13 +79,14 @@ const server = http.createServer((req,res) => {
 		.catch((err) => writeResponse('plain',res,'No Results'));	
 	}
 	else if (/\/signup.*/.test(req.url)) {
-	    if (Object.keys(host.hermes.actions).filter((key) => key === 'update').length !== 0) {
-	    host.signUp('Yes\\ -\\ Long\\ Distance\\ Runaround\\ \\[SC\\ Karaoke\\].cdg');
+	    if (host.activeRound == true) {
+		host.signUp('Yes\\ -\\ Long\\ Distance\\ Runaround\\ \\[SC\\ Karaoke\\].cdg');
 	    }
 	    else {
-	    host.signUp([]);		
-	    host.hermes.publish('next',['ZZ\\ Ward\\ -\\ 365\\ Days\\ \\[SN\\ Karaoke\\].cdg']);
+		host.activeRound = true;
+		host.hermes.publish('next',['ZZ\\ Ward\\ -\\ 365\\ Days\\ \\[SN\\ Karaoke\\].cdg']);
 	    }
+	    writeResponse('plain',res,'signed up');
 	}
 	else {
 	    if (req.url == '/') {req.url = '/index.html'}
