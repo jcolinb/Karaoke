@@ -53,8 +53,7 @@ function playSong ([song,...rest]) {
 	    console.log(`${rest}`);
 	    host.hermes.publish('update',rest || []);
 	    console.log(`${rest}`);
-	    host.hermes.clear('update');
-	    !rest.length && delete host.hermes.actions.update;
+	    !rest.length && host.activeRound = false;
 	    rest.length && host.hermes.publish('next',rest); })
 	.catch((err) => console.log(err));
 }
