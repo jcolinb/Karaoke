@@ -1,4 +1,4 @@
-const snake_case = (str) => str.replace(/\s/,'_');
+const snake_case = (str) => str.replace(/\s/g,'_');
 
 //const parseSongString = (song) => song && song.replace(/_/ig,' ');
 

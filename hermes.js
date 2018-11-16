@@ -8,4 +8,8 @@ exports.Hermes = function () {
 	    fn(arg);
 	});
     };
+
+    this.clear = function (act) {
+	this.actions[act] = [];
+    };
 };

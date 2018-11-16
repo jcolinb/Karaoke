@@ -25,6 +25,10 @@ const writeResponse = R.curry((responseType,res,page) => {
 
 const un_snake = (str) => str.replace('_',' ');
 
+const escapeBrackets = (str) => (str == '[' || str == ']') ? `\\${str}` : str;
+
+const doubleEsc = (str,...chars) => chars.reduce((acc,val) => acc = acc.replace(new RegExp(escapeBrackets(val),'g'),`\\${val}`),str);
+
 const parseQuery = ({url}) => parse(url,true);
 
 const pullFields = ({query}) => [un_snake(query.term),query.field];
@@ -44,13 +48,17 @@ const searchFiles = ([term,field]) => (field === 'artist') ?
 const searchArtist = R.compose(searchFiles,pullFields,parseQuery);
 
 function playSong ([song,...rest]) {
-    console.log(`${song}`);
-    host.hermes.publish('update',rest);
-    console.log(rest);
     sh(`pykaraoke ./HardDrive/Songs/${song}`)
-	.then(function (err,stdout,stderr) { console.log(`${err}`);host.hermes.publish('next',rest); })
+	.then(function () {
+	    console.log(`${rest}`);
+	    host.hermes.publish('update',rest || []);
+	    console.log(`${rest}`);
+	    host.hermes.clear('update');
+	    !rest.length && delete host.hermes.actions.update;
+	    rest.length && host.hermes.publish('next',rest); })
 	.catch((err) => console.log(err));
 }
+
 const updateList = R.curry(function (song,list) {list.push(song);}); 
 
 const ip = getIP(os.networkInterfaces());
@@ -71,8 +79,13 @@ const server = http.createServer((req,res) => {
 		.catch((err) => writeResponse('plain',res,'No Results'));	
 	}
 	else if (/\/signup.*/.test(req.url)) {
-	    console.log('recieved');
-	    host.hermes.publish('next',['ZZ\\ Ward\\ -\\ 365\\ Days\\ \\[SN\\ Karaoke\\].cdg','ZZ\\ Ward\\ -\\ 365\\ Days\\ \\[SN\\ Karaoke\\].cdg','ZZ\\ Ward\\ -\\ 365\\ Days\\ \\[SN\\ Karaoke\\].cdg']);
+	    if (Object.keys(host.hermes.actions).filter((key) => key === 'update').length !== 0) {
+	    host.signUp('Yes\\ -\\ Long\\ Distance\\ Runaround\\ \\[SC\\ Karaoke\\].cdg');
+	    }
+	    else {
+	    host.signUp([]);		
+	    host.hermes.publish('next',['ZZ\\ Ward\\ -\\ 365\\ Days\\ \\[SN\\ Karaoke\\].cdg']);
+	    }
 	}
 	else {
 	    if (req.url == '/') {req.url = '/index.html'}
