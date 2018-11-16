@@ -54,7 +54,7 @@ const searchFiles = ([term,field]) => (field === 'artist') ?
 const searchArtist = R.compose(searchFiles,pullFields,parseQuery);
 
 function playSong ([song,...rest]) {
-    sh(`pykaraoke ./HardDrive/Songs/${song}`)
+    sh(`pykaraoke -f ./HardDrive/Songs/${song}`)
 	.then(function () {
 	    console.log(`${rest}`);
 	    host.hermes.publish('update',rest || []);
@@ -62,7 +62,10 @@ function playSong ([song,...rest]) {
 	    console.log(`${rest}`);
 	    !rest.length && (host.activeRound = false);
 	    rest.length && host.hermes.publish('next',rest); })
-	.catch((err) => console.log(err));
+	.catch((err) => {console.log(err);
+			 !rest.length && (host.activeRound = false);			 
+			 rest.length && host.hermes.publish('next',rest);
+			});
 }
 
 const updateList = R.curry(function (song,list) {list.push(song);}); 
