@@ -1,20 +1,21 @@
 const snake_case = (str) => str.replace(/\s/g,'_');
-
+const escapeAmpersand = (str) => str.replace(/&/g,'%26');
 //const parseSongString = (song) => song && song.replace(/_/ig,' ');
 
 const seperateArtist = (song) => song && song.split('-');
 
-function buildListItem ([artist,song]) {
-
+function buildListItem (song) {
+    let [artist,version] = seperateArtist(song);
+    let cleanSong = snake_case(escapeAmpersand(song));
     if (artist) {
 	let entry = document.createElement('li');
-	entry.innerHTML = (!song) ? `${artist}` : `${song} <span>by</span> ${artist}`;
-	entry.addEventListener('click',() => signUp(song));
+	entry.innerHTML = (!version) ? `${artist}` : `${version} <span>by</span> ${artist}`;
+	entry.addEventListener('click',() => signUp(cleanSong));
 	results.append(entry);    
     }
 }
 
-const makeSongEntry = R.compose(buildListItem,seperateArtist);
+//const makeSongEntry = R.compose(buildListItem,seperateArtist);
 
 function responseCheck (res) {
     if (res.ok) {
@@ -28,7 +29,7 @@ function responseCheck (res) {
 function buildList (str) {
     let results = document.getElementById('results');
     results.innerHTML = '';
-    str.split('\n').map(makeSongEntry);
+    str.split('\n').map(buildListItem);
 }
 
 const updateSearch = (term,field) => {

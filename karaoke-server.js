@@ -23,15 +23,19 @@ const writeResponse = R.curry((responseType,res,page) => {
     res.end();
 });
 
-const un_snake = (str) => str.replace('_',' ');
+const echo = (val) => {console.log(`${val}`);return val;};
+
+const un_snake = (str) => str.replace(/_/g,' ');
 
 const escapeBrackets = (str) => (str == '[' || str == ']') ? `\\${str}` : str;
 
-const doubleEsc = (str,...chars) => chars.reduce((acc,val) => acc = acc.replace(new RegExp(escapeBrackets(val),'g'),`\\${val}`),str);
+const doubleEsc = (...chars) => (str) => chars.reduce((acc,val) => acc = acc.replace(new RegExp(escapeBrackets(val),'g'),`\\${val}`),str);
 
 const parseQuery = ({url}) => parse(url,true);
 
 const pullFields = ({query}) => [un_snake(query.term),query.field];
+
+const pullSong = ({query}) => query.song;
 
 const parseResponseType = ({url}) => 
     /(.html)$/.test(url) && 'html' ||
@@ -39,11 +43,13 @@ const parseResponseType = ({url}) =>
     /(.js)$/.test(url) && 'javascript' ||
       'plain';
 
+const songString = R.compose(echo,doubleEsc(' ','[',']',"'",'&'),un_snake,pullSong,parseQuery);
+
 const respond = R.compose(writeResponse,parseResponseType);
 
 const searchFiles = ([term,field]) => (field === 'artist') ?
-      sh(`ls ./HardDrive/Songs | grep -i -m 15 -e '${term}.*-.*\.mp3'`) :
-      sh(`ls ./HardDrive/Songs | grep -i -m 15 -e '-.*${term}.*\.mp3'`);
+      sh(`ls ./HardDrive/Songs | grep -i -m 15 -e '${term}.*-.*\.cdg'`) :
+      sh(`ls ./HardDrive/Songs | grep -i -m 15 -e '-.*${term}.*\.cdg'`);
 
 const searchArtist = R.compose(searchFiles,pullFields,parseQuery);
 
@@ -52,8 +58,9 @@ function playSong ([song,...rest]) {
 	.then(function () {
 	    console.log(`${rest}`);
 	    host.hermes.publish('update',rest || []);
+	    host.hermes.clear('update');
 	    console.log(`${rest}`);
-	    !rest.length && host.activeRound = false;
+	    !rest.length && (host.activeRound = false);
 	    rest.length && host.hermes.publish('next',rest); })
 	.catch((err) => console.log(err));
 }
@@ -79,11 +86,11 @@ const server = http.createServer((req,res) => {
 	}
 	else if (/\/signup.*/.test(req.url)) {
 	    if (host.activeRound == true) {
-		host.signUp('Yes\\ -\\ Long\\ Distance\\ Runaround\\ \\[SC\\ Karaoke\\].cdg');
+		host.signUp(songString(req));
 	    }
 	    else {
 		host.activeRound = true;
-		host.hermes.publish('next',['ZZ\\ Ward\\ -\\ 365\\ Days\\ \\[SN\\ Karaoke\\].cdg']);
+		host.hermes.publish('next',[songString(req)]);
 	    }
 	    writeResponse('plain',res,'signed up');
 	}
