@@ -23,7 +23,7 @@ const writeResponse = R.curry((responseType,res,page) => {
     res.end();
 });
 
-const echo = (val) => {console.log(`${val}`);return val;};
+const echo = (val) => {console.log(`${val}`);return val;}; //echos value state for composition checking
 
 const un_snake = (str) => str.replace(/_/g,' ');
 
