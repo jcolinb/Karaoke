@@ -36,7 +36,6 @@ li span {
 #search-bar {
     width: 60%;
     height: 10%;
-    position: absolute;
     display: flex;
     align-items: center;
     justify-content: space-evenly;
