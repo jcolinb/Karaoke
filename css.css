@@ -1,12 +1,12 @@
 body,html {
+    background-color: grey;
     height: 100%;
-    width: 100%;
+    width: 100vw;
     margin: 0px;
 }
 
 main {
-    height: 100%;
-    width: 100%;
+    width: 100vw;
     display: flex;
     background-color: grey;
     flex-direction: column;
@@ -17,6 +17,10 @@ main {
 #error {
     font-size: 2em;
     font-color: red;
+}
+
+#results {
+    padding: 0px;
 }
 
 li {
