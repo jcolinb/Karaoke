@@ -37,13 +37,17 @@ const pullFields = ({query}) => [un_snake(query.term),query.field];
 
 const pullSong = ({query}) => query.song;
 
+const pullSinger = ({query}) => query.singer;
+
+const singerString = R.compose(pullSinger,parseQuery);
+
 const parseResponseType = ({url}) => 
     /(.html)$/.test(url) && 'html' ||
     /(.css)$/.test(url) && 'css' ||
     /(.js)$/.test(url) && 'javascript' ||
       'plain';
 
-const songString = R.compose(echo,doubleEsc(' ','[',']',"'",'&'),un_snake,pullSong,parseQuery);
+const songString = R.compose(doubleEsc(' ','[',']',"'",'&'),un_snake,pullSong,parseQuery);
 
 const respond = R.compose(writeResponse,parseResponseType);
 
@@ -53,29 +57,39 @@ const searchFiles = ([term,field]) => (field === 'artist') ?
 
 const searchArtist = R.compose(searchFiles,pullFields,parseQuery);
 
-function playSong ([song,...rest]) {
-    sh(`pykaraoke -f ./HardDrive/Songs/${song}`)
+function playSong ([singer,...rest]) {
+    sh(`pykaraoke -f ./HardDrive/Songs/${singer.song}`)
 	.then(function () {
-	    console.log(`${rest}`);
 	    host.hermes.publish('update',rest || []);
 	    host.hermes.clear('update');
-	    console.log(`${rest}`);
 	    !rest.length && (host.activeRound = false);
-	    rest.length && host.hermes.publish('next',rest); })
+	    if (rest.length) {
+		first(rest).alert();
+		setTimeout(function() {host.hermes.publish('next',rest);},30000);
+	    }
+	})
 	.catch((err) => {console.log(err);
 			 !rest.length && (host.activeRound = false);			 
 			 rest.length && host.hermes.publish('next',rest);
 			});
 }
 
-const updateList = R.curry(function (song,list) {list.push(song);}); 
+function singer (req,res) {
+    return {
+	name: singerString(req),
+	song: songString(req),
+	alert: function () {writeResponse('plain',res,'Time to sing!');}
+    };
+}
+
+const updateList = R.curry(function (singer,list) {list.push(singer);}); 
 
 const ip = getIP(os.networkInterfaces());
 const port = 3000;
 
 const host = {};
 host.hermes = new hermes.Hermes();
-host.signUp = function (song) {host.hermes.subscribe('update',updateList(song));};
+host.signUp = function (singer) {host.hermes.subscribe('update',updateList(singer));};
 host.hermes.subscribe('next',playSong);
 host.activeRound = false;
 
@@ -89,13 +103,12 @@ const server = http.createServer((req,res) => {
 	}
 	else if (/\/signup.*/.test(req.url)) {
 	    if (host.activeRound == true) {
-		host.signUp(songString(req));
+		host.signUp(singer(req,res));
 	    }
 	    else {
 		host.activeRound = true;
-		host.hermes.publish('next',[songString(req)]);
+		host.hermes.publish('next',[singer(req,res)]);
 	    }
-	    writeResponse('plain',res,'signed up');
 	}
 	else {
 	    if (req.url == '/') {req.url = '/index.html'}

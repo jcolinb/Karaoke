@@ -41,7 +41,8 @@ const updateSearch = (term,field) => {
 };
 
 function signUp (song) {
-    fetch(`/signup?song=${song}`,{method:'GET'})
+    let singer = prompt("Your Name: ","enter your name here");
+    fetch(`/signup?song=${song}&singer=${singer}`,{method:'GET',connection:'keep-alive'})
 	.then(responseCheck)
 	.then((body) => body.text())
 	.then((headsup) => alert(headsup));
