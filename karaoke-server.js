@@ -75,11 +75,12 @@ function playSong ([singer,...rest]) {
 }
 
 function singer (req,res) {
-    return {
+    let singer = {
 	name: singerString(req),
 	song: songString(req),
 	alert: function () {writeResponse('plain',res,'Time to sing!');}
     };
+    return singer;
 }
 
 const updateList = R.curry(function (singer,list) {list.push(singer);}); 
