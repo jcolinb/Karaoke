@@ -82,7 +82,7 @@ function singer (req,res) {
     };
 }
 
-const updateList = R.curry(function (singer,list) {list.push(singer);}); 
+const updateList = R.curry(function (singer,list) {if (!list.includes(singer)) {list.push(singer);}}); 
 
 const ip = getIP(os.networkInterfaces());
 const port = 3000;
