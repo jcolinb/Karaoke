@@ -72,10 +72,11 @@ function playSong ([singer,...rest]) {
 }
 
 function singer (req,res) {
-    return {
+    let singer = {
 	name: singerString(req),
 	song: songString(req),
     };
+    return singer;
 }
 
 const updateList = R.curry(function (singer,list) {list.push(singer);}); 
