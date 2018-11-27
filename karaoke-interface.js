@@ -1,3 +1,8 @@
+const state = {
+    name: null,
+    freezeList: false
+};
+
 const snake_case = (str) => str.replace(/\s/g,'_');
 const escapeAmpersand = (str) => str.replace(/&/g,'%26');
 //const parseSongString = (song) => song && song.replace(/_/ig,' ');
@@ -15,6 +20,12 @@ function buildListItem (song) {
     }
 }
 
+function singerItem (singer) {
+    let entry = document.createElement('li');
+    entry.innerHTML = singer;
+    results.append(entry);
+}
+
 //const makeSongEntry = R.compose(buildListItem,seperateArtist);
 
 function responseCheck (res) {
@@ -24,28 +35,39 @@ function responseCheck (res) {
     else {
 	throw Error('400 series error!');
     }
-};
+}
 
-function buildList (str) {
+function listLoop () {
+    if (!state.freezeList) { 
+	fetch('/list')
+	    .then(listLoop);
+    }
+}
+
+const buildList = (fn) => (str) => {
     let results = document.getElementById('results');
     results.innerHTML = '';
-    str.split('\n').map(buildListItem);
-}
+    str.split('\n').map(fn);
+};
 
 const updateSearch = (term,field) => {
     fetch(`/search?term=${snake_case(term.value)}&field=${field.value}`,{method:'GET'})
 	.then(responseCheck)
 	.then((body) => body.text())
-	.then(buildList)
+	.then(buildList(buildListItem))
+	.then(function () {state.freezeList = true;})
 	.catch((err) => alert(err.message));
 };
 
 function signUp (song) {
+    state.freezeList = false;
     let singer = prompt("Your Name: ","enter your name here");
+    state.name = singer;
     fetch(`/signup?song=${song}&singer=${singer}`,{method:'GET',connection:'keep-alive'})
 	.then(responseCheck)
 	.then((body) => body.text())
-	.then((headsup) => alert(headsup));
+	.then(buildList(singerItem))
+	.then(listLoop);
 };
 
 let term = document.getElementById('search-term');

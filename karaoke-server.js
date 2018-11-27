@@ -71,7 +71,17 @@ function playSong ([singer,...rest]) {
 			});
 }
 
-function singer (req,res) {
+function newLiner (list) {
+    list.reduce((acc,val) => acc + val.name + '\n','');
+}
+
+function getList (target) {
+    return function (list) {
+	target = newLiner(list);
+    }
+}
+
+function singer (req) {
     let singer = {
 	name: singerString(req),
 	song: songString(req),
@@ -89,6 +99,8 @@ host.hermes = new hermes.Hermes();
 host.signUp = function (singer) {host.hermes.subscribe('update',updateList(singer));};
 host.hermes.subscribe('next',playSong);
 host.activeRound = false;
+host.list = null;
+host.hermes.subscribe('next',getList(host.list));
 
 const server = http.createServer((req,res) => {
 
@@ -98,14 +110,18 @@ const server = http.createServer((req,res) => {
 		.then(respond(req)(res))
 		.catch((err) => writeResponse('plain',res,'No Results'));	
 	}
+	else if (/\/list/.test(req.url)) {
+	    host.list && writeResponse('plain',res,host.list) || writeResponse('plain',res,'sign up now!');	    
+	}
 	else if (/\/signup.*/.test(req.url)) {
 	    if (host.activeRound == true) {
-		host.signUp(singer(req,res));
+		host.signUp(singer(req));
 	    }
 	    else {
 		host.activeRound = true;
-		host.hermes.publish('next',[singer(req,res)]);
+		host.hermes.publish('next',[singer(req)]);
 	    }
+	    host.list && writeResponse('plain',res,host.list) || writeResponse('plain',res,'sign up now!');
 	}
 	else {
 	    if (req.url == '/') {req.url = '/index.html'}
