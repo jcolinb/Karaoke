@@ -63,10 +63,7 @@ function playSong ([singer,...rest]) {
 	    host.hermes.publish('update',rest || []);
 	    host.hermes.clear('update');
 	    !rest.length && (host.activeRound = false);
-	    if (rest.length) {
-		first(rest).alert();
-		setTimeout(function() {host.hermes.publish('next',rest);},30000);
-	    }
+	    rest.length && setTimeout(function() {host.hermes.publish('next',rest);},30000);
 	})
 	.catch((err) => {console.log(err);
 			 !rest.length && (host.activeRound = false);			 
@@ -78,11 +75,10 @@ function singer (req,res) {
     return {
 	name: singerString(req),
 	song: songString(req),
-	alert: function () {writeResponse('plain',res,'Time to sing!');}
     };
 }
 
-const updateList = R.curry(function (singer,list) {if (!list.includes(singer)) {list.push(singer);}}); 
+const updateList = R.curry(function (singer,list) {list.push(singer);}); 
 
 const ip = getIP(os.networkInterfaces());
 const port = 3000;
