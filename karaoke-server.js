@@ -63,7 +63,7 @@ function playSong ([singer,...rest]) {
 	    host.hermes.publish('update',rest || []);
 	    host.hermes.clear('update');
 	    !rest.length && (host.activeRound = false);
-	    rest.length && setTimeout(function() {host.hermes.publish('next',rest);},30000);
+	    rest.length && setTimeout(function() {host.hermes.publish('next',rest);},3000);
 	})
 	.catch((err) => {console.log(err);
 			 !rest.length && (host.activeRound = false);			 
@@ -72,14 +72,12 @@ function playSong ([singer,...rest]) {
 }
 
 function newLiner (list) {
-    list.reduce((acc,val) => acc + val.name + '\n','');
+    return list.reduce((acc,val) => acc + val.name + '\n','');
 }
 
-function getList (target) {
-    return function (list) {
-	target = newLiner(list);
+function getList (list) {
+	host.list = newLiner(list);
     }
-}
 
 function singer (req) {
     let singer = {
@@ -100,7 +98,7 @@ host.signUp = function (singer) {host.hermes.subscribe('update',updateList(singe
 host.hermes.subscribe('next',playSong);
 host.activeRound = false;
 host.list = null;
-host.hermes.subscribe('next',getList(host.list));
+host.hermes.subscribe('next',getList);
 
 const server = http.createServer((req,res) => {
 
@@ -111,7 +109,7 @@ const server = http.createServer((req,res) => {
 		.catch((err) => writeResponse('plain',res,'No Results'));	
 	}
 	else if (/\/list/.test(req.url)) {
-	    host.list && writeResponse('plain',res,host.list) || writeResponse('plain',res,'sign up now!');	    
+	    (host.list) ?  writeResponse('plain',res,host.list) : writeResponse('plain',res,'sign up now!');	    
 	}
 	else if (/\/signup.*/.test(req.url)) {
 	    if (host.activeRound == true) {
@@ -121,7 +119,8 @@ const server = http.createServer((req,res) => {
 		host.activeRound = true;
 		host.hermes.publish('next',[singer(req)]);
 	    }
-	    host.list && writeResponse('plain',res,host.list) || writeResponse('plain',res,'sign up now!');
+	    (host.list) ?  writeResponse('plain',res,host.list) : writeResponse('plain',res,'sign up now!');	    
+
 	}
 	else {
 	    if (req.url == '/') {req.url = '/index.html'}

@@ -21,9 +21,11 @@ function buildListItem (song) {
 }
 
 function singerItem (singer) {
-    let entry = document.createElement('li');
-    entry.innerHTML = singer;
-    results.append(entry);
+    if (singer) {
+	let entry = document.createElement('li');
+	entry.innerHTML = singer;
+	results.append(entry);
+    }
 }
 
 //const makeSongEntry = R.compose(buildListItem,seperateArtist);
@@ -39,8 +41,11 @@ function responseCheck (res) {
 
 function listLoop () {
     if (!state.freezeList) { 
-	fetch('/list')
-	    .then(listLoop);
+	fetch('/list',{method:'GET'})
+	    .then(responseCheck)
+	    .then((body) => body.text())
+	    .then(buildList(singerItem))	
+	    .then(() => setTimeout(listLoop,30000));
     }
 }
 
