@@ -1,5 +1,6 @@
 const state = {
     name: null,
+    waiting: false,
     freezeList: false
 };
 
@@ -20,15 +21,26 @@ function buildListItem (song) {
     }
 }
 
-function singerItem (singer) {
+function singerItem (singer,i) {
     if (singer) {
 	let entry = document.createElement('li');
+	i == 0 && (singer = `<span id='green'>${singer}</span>`);
+	i == 1 && (singer = `<span id='red'>${singer}</span>`);
 	entry.innerHTML = singer;
 	results.append(entry);
     }
 }
 
 //const makeSongEntry = R.compose(buildListItem,seperateArtist);
+
+function headsUp (list) {
+    let arr = list.split('\n');
+    if (arr[0].includes(state.name) && state.waiting) {
+	alert('time to sing!');
+	state.waiting = false;
+    }
+    return list;
+}
 
 function responseCheck (res) {
     if (res.ok) {
@@ -44,8 +56,9 @@ function listLoop () {
 	fetch('/list',{method:'GET'})
 	    .then(responseCheck)
 	    .then((body) => body.text())
+	    .then(headsUp)
 	    .then(buildList(singerItem))	
-	    .then(() => setTimeout(listLoop,30000));
+	    .then(() => setTimeout(listLoop,3000));
     }
 }
 
@@ -66,11 +79,13 @@ const updateSearch = (term,field) => {
 
 function signUp (song) {
     state.freezeList = false;
-    let singer = prompt("Your Name: ","enter your name here");
+    let singer = prompt("Your Name: ",`${state.name}`);
     state.name = singer;
+    state.waiting = true;
     fetch(`/signup?song=${song}&singer=${singer}`,{method:'GET',connection:'keep-alive'})
 	.then(responseCheck)
 	.then((body) => body.text())
+	.then(headsUp)
 	.then(buildList(singerItem))
 	.then(listLoop);
 };
