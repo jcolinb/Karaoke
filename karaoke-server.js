@@ -93,7 +93,7 @@ const ip = getIP(os.networkInterfaces());
 const port = 3000;
 
 const host = {};
-host.hermes = new hermes.Hermes();
+host.hermes = new hermes();
 host.signUp = function (singer) {host.hermes.subscribe('update',updateList(singer));};
 host.hermes.subscribe('next',playSong);
 host.activeRound = false;

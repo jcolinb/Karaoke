@@ -1,4 +1,4 @@
-exports.Hermes = function () {
+module.exports= function () {
     this.actions = {};
     this.subscribe = function (act,fn) {
 	this.actions[act] = (this.actions[act] !== undefined) ? this.actions[act].concat([fn]) : [].concat([fn]);
