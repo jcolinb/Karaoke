@@ -108,6 +108,7 @@ const host = {};
 host.hermes = new hermes();
 host.activeRound = false;
 host.list = null;
+host.rounds = [];
 host.hermes.subscribe('next',getList);
 host.hermes.subscribe('next',playSong);
 
