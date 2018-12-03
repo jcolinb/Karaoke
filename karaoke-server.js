@@ -6,6 +6,7 @@ const {parse} = require('url');
 const os = require('os');
 const hermes = require('./hermes');
 
+// helper functions and their composition to dynamically resolve server IP at runtime
 const first = (arr) => arr[0];
 const pluck = R.curry((key,arr) => arr.map((obj) => obj[key]));
 const values = (obj) => Object.values(obj);
@@ -13,9 +14,32 @@ const filter4vPI = (arr) => arr.filter((val) => val.family == 'IPv4' && val.inte
 const flatten = (arr) => arr.reduce((acc,cur) => acc.concat(cur));
 const getIP = R.compose(first,pluck('address'),filter4vPI,flatten,values);
 
-const readFile = ({url}) => new Promise((resolve,reject) => {fs.readFile(`.${url}`,(err,data) => {(err) ? reject(err) : resolve(data)})});
-const sh = (cmd) => new Promise((resolve,reject) => {exec(cmd,(err,stdout,stderr) => (err) ? reject(stderr) : resolve(stdout))});
+// async functions for file system interactions
+const readFile = ({url}) => new Promise((resolve,reject) => { fs.readFile(`.${url}`,(err,data) => { (err) ? reject(err) : resolve(data) }) });
+const sh = (cmd) => new Promise((resolve,reject) => { exec(cmd,(err,stdout,stderr) => (err) ? reject(stderr) : resolve(stdout)) });
 
+// helper functions for strings
+const echo = (val) => { console.log(`${val}`);return val; }; //echos value state for composition checking
+const un_snake = (str) => str.replace(/_/g,' ');
+const escapeBrackets = (str) => (str == '[' || str == ']') ? `\\${str}` : str;
+const doubleEsc = (...chars) => (str) => chars.reduce((acc,val) => acc = acc.replace(new RegExp(escapeBrackets(val),'g'),`\\${val}`),str);
+
+// helper functions for response handling and some compositions
+const parseQuery = ({url}) => parse(url,true);
+const pullFields = ({query}) => [un_snake(query.term),query.field];
+const pullSong = ({query}) => query.song;
+const pullSinger = ({query}) => query.singer;
+const singerString = R.compose(pullSinger,parseQuery);
+const songString = R.compose(doubleEsc(' ','[',']',"'",'&','(',')'),un_snake,pullSong,parseQuery);
+
+// returns Content-Type for response headers for available resources
+const parseResponseType = ({url}) => 
+    /(.html)$/.test(url) && 'html' ||
+    /(.css)$/.test(url) && 'css' ||
+    /(.js)$/.test(url) && 'javascript' ||
+      'plain';
+
+// write and send response
 const writeResponse = R.curry((responseType,res,page) => {
     res.statusCode = 200;
     res.setHeader('Content-Type',`text/${responseType}`);
@@ -23,40 +47,18 @@ const writeResponse = R.curry((responseType,res,page) => {
     res.end();
 });
 
-const echo = (val) => {console.log(`${val}`);return val;}; //echos value state for composition checking
-
-const un_snake = (str) => str.replace(/_/g,' ');
-
-const escapeBrackets = (str) => (str == '[' || str == ']') ? `\\${str}` : str;
-
-const doubleEsc = (...chars) => (str) => chars.reduce((acc,val) => acc = acc.replace(new RegExp(escapeBrackets(val),'g'),`\\${val}`),str);
-
-const parseQuery = ({url}) => parse(url,true);
-
-const pullFields = ({query}) => [un_snake(query.term),query.field];
-
-const pullSong = ({query}) => query.song;
-
-const pullSinger = ({query}) => query.singer;
-
-const singerString = R.compose(pullSinger,parseQuery);
-
-const parseResponseType = ({url}) => 
-    /(.html)$/.test(url) && 'html' ||
-    /(.css)$/.test(url) && 'css' ||
-    /(.js)$/.test(url) && 'javascript' ||
-      'plain';
-
-const songString = R.compose(doubleEsc(' ','[',']',"'",'&'),un_snake,pullSong,parseQuery);
-
+// composition to respond to request for core resources. called respond(req)(res), will return function awaiting response body
 const respond = R.compose(writeResponse,parseResponseType);
 
+// async function to search song library dynamically with grep
 const searchFiles = ([term,field]) => (field === 'artist') ?
       sh(`ls ./HardDrive/Songs | grep -i -m 15 -e '${term}.*-.*\.cdg'`) :
       sh(`ls ./HardDrive/Songs | grep -i -m 15 -e '-.*${term}.*\.cdg'`);
 
+// composition from /search request to search results string
 const searchArtist = R.compose(searchFiles,pullFields,parseQuery);
 
+// main song loop. list-comprehension style, with side-effects. includes publish() event which results in recursive call
 function playSong ([singer,...rest]) {
     sh(`pykaraoke -f ./HardDrive/Songs/${singer.song}`)
 	.then(function () {
@@ -87,18 +89,17 @@ function singer (req) {
     return singer;
 }
 
-const updateList = R.curry(function (singer,list) {list.push(singer);}); 
-
-const ip = getIP(os.networkInterfaces());
-const port = 3000;
+const updateList = R.curry(function (singer,list) {list.push(singer);});
+function signUp (singer) {
+    host.hermes.subscribe('update',updateList(singer));
+}
 
 const host = {};
 host.hermes = new hermes();
-host.signUp = function (singer) {host.hermes.subscribe('update',updateList(singer));};
-host.hermes.subscribe('next',playSong);
 host.activeRound = false;
 host.list = null;
 host.hermes.subscribe('next',getList);
+host.hermes.subscribe('next',playSong);
 
 const server = http.createServer((req,res) => {
 
@@ -109,11 +110,11 @@ const server = http.createServer((req,res) => {
 		.catch((err) => writeResponse('plain',res,'No Results'));	
 	}
 	else if (/\/list/.test(req.url)) {
-	    (host.list) ?  writeResponse('plain',res,host.list) : writeResponse('plain',res,'sign up now!');	    
+	    (host.list) ? writeResponse('plain',res,host.list) : writeResponse('plain',res,'sign up now!');	    
 	}
 	else if (/\/signup.*/.test(req.url)) {
 	    if (host.activeRound == true) {
-		host.signUp(singer(req));
+		signUp(singer(req));
 	    }
 	    else {
 		host.activeRound = true;
@@ -141,4 +142,8 @@ const server = http.createServer((req,res) => {
 	}
     }
 });
-server.listen(port, () => {console.log(`server running at ${ip}:${port}`);});
+
+const ip = getIP(os.networkInterfaces());
+const port = 3000;
+
+server.listen(port, () => { console.log(`server running at ${ip}:${port}`); });
