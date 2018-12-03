@@ -30,7 +30,7 @@ const pullFields = ({query}) => [un_snake(query.term),query.field];
 const pullSong = ({query}) => query.song;
 const pullSinger = ({query}) => query.singer;
 const singerString = R.compose(pullSinger,parseQuery);
-const songString = R.compose(doubleEsc(' ','[',']',"'",'&','(',')'),un_snake,pullSong,parseQuery);
+const songString = R.compose(doubleEsc(' ','[',']',"'",'&'),un_snake,pullSong,parseQuery);
 
 // returns Content-Type for response headers for available resources
 const parseResponseType = ({url}) => 
