@@ -7,11 +7,11 @@ const os = require('os');
 const hermes = require('./hermes');
 
 // helper functions and their composition to dynamically resolve server IP at runtime
-const first = (arr) => arr[0];
-const pluck = R.curry((key,arr) => arr.map((obj) => obj[key]));
-const values = (obj) => Object.values(obj);
+const first = (arr) => arr[0]; // [a] -> a
+const pluck = R.curry((key,arr) => arr.map((obj) => obj[key])); // str -> [{a:b}] -> [b]
+const values = (obj) => Object.values(obj); // {a:b} -> [b] 
 const filter4vPI = (arr) => arr.filter((val) => val.family == 'IPv4' && val.internal == false); 
-const flatten = (arr) => arr.reduce((acc,cur) => acc.concat(cur));
+const flatten = (arr) => arr.reduce((acc,cur) => acc.concat(cur)); // [[a]] -> [a]
 const getIP = R.compose(first,pluck('address'),filter4vPI,flatten,values);
 
 // async functions for file system interactions
@@ -20,8 +20,8 @@ const sh = (cmd) => new Promise((resolve,reject) => { exec(cmd,(err,stdout,stder
 
 // helper functions for strings
 const echo = (val) => { console.log(`${val}`);return val; }; //echos value state for composition checking
-const un_snake = (str) => str.replace(/_/g,' ');
-const escapeBrackets = (str) => (str == '[' || str == ']') ? `\\${str}` : str;
+const un_snake = (str) => str.replace(/_/g,' '); 
+const escapeBrackets = (str) => (str == '[' || str == ']') ? `\\${str}` : str; 
 const doubleEsc = (...chars) => (str) => chars.reduce((acc,val) => acc = acc.replace(new RegExp(escapeBrackets(val),'g'),`\\${val}`),str);
 
 // helper functions for response handling and some compositions
@@ -64,7 +64,9 @@ function playSong ([singer,...rest]) {
 	.then(function () {
 	    host.hermes.publish('update',rest || []);
 	    host.hermes.clear('update');
-	    !rest.length && (host.activeRound = false);
+	    console.log(`rest: ${rest}\nrounds: ${host.rounds}`);
+	    !rest.length && !host.rounds.length && (host.activeRound = false);
+	    !rest.length && host.rounds.length && setTimeout(function() {host.hermes.publish('next',host.rounds.pop());},3000);
 	    rest.length && setTimeout(function() {host.hermes.publish('next',rest);},3000);
 	})
 	.catch((err) => {console.log(err);
@@ -91,11 +93,11 @@ function singer (req) {
 
 const checkList = (str,arr) => arr.includes(str);
 const flatPluck = (str) => R.compose(pluck(str),flatten);
-const calcIndex = (str,arr) => arr.filter((e) => e.includes(str)).length;
+const calcIndex = (str,arr) => arr.filter((e) => e == str).length;
 const updateList = R.curry(function (singer,list) {
     (!checkList(singer.name,pluck('name',list))) ?
 	list.push(singer) :
-	(checkList(singer.name,flatPluck('name')(host.rounds))) ?
+	(host.rounds.length && checkList(singer.name,flatPluck('name')(host.rounds))) ?
 	    host.rounds[calcIndex(singer.name,flatPluck('name')(host.rounds))].push(singer) :
 	    host.rounds.push([singer]);
 });
