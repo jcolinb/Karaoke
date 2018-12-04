@@ -11,7 +11,7 @@ const first = (arr) => arr[0]; // [a] -> a
 const pluck = R.curry((key,arr) => arr.map((obj) => obj[key])); // str -> [{a:b}] -> [b]
 const values = (obj) => Object.values(obj); // {a:b} -> [b] 
 const filter4vPI = (arr) => arr.filter((val) => val.family == 'IPv4' && val.internal == false); 
-const flatten = (arr) => arr.reduce((acc,cur) => acc.concat(cur)); // [[a]] -> [a]
+const flatten = (arr) => arr.reduce((acc,cur) => acc.concat(cur),[]); // [[a]] -> [a]
 const getIP = R.compose(first,pluck('address'),filter4vPI,flatten,values);
 
 // async functions for file system interactions
@@ -95,11 +95,12 @@ const checkList = (str,arr) => arr.includes(str);
 const flatPluck = (str) => R.compose(pluck(str),flatten);
 const calcIndex = (str,arr) => arr.filter((e) => e == str).length;
 const updateList = R.curry(function (singer,list) {
-    (!checkList(singer.name,pluck('name',list))) ?
-	list.push(singer) :
-	(checkList(singer.name,flatPluck('name')(host.rounds)) && calcIndex(singer.name,flatPluck('name')(host.rounds)) < host.rounds.length ) ?
-	    host.rounds[calcIndex(singer.name,flatPluck('name')(host.rounds))].push(singer) :
-	    host.rounds.push([singer]);
+    let inCurrent = checkList(singer.name,pluck('name',list));
+    let inRounds = checkList(singer.name,flatPluck('name')(host.rounds));
+    let singerIndex = calcIndex(singer.name,flatPluck('name')(host.rounds));
+    console.log(`inCurrent: ${inCurrent}\ninRounds: ${inRounds}\nsingerIndex: ${singerIndex}\n\n`);
+
+    (inCurrent) ? (inRounds && (singerIndex < host.rounds.length)) ? host.rounds[singerIndex].push(singer) : host.rounds.push([singer]) : list.push(singer);
 });
 
 function signUp (singer) {
