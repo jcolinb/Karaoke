@@ -1,5 +1,5 @@
 const state = {
-    name: [],
+    name: '',
     waiting: false,
     songs: 0,
     freezeList: false
@@ -36,13 +36,13 @@ function singerItem (singer,i) {
 
 function headsUp (list) {
     let arr = list.split('\n');
-    if (state.name.filter((name) => name = arr[0]).length && state.waiting) {
+    if (state.name == arr[0] && state.waiting) {
 	alert('time to sing!');
 	state.waiting = false;
 	state.songs--;
     }
     else {
-	state.songs && state.waiting = true;
+	state.songs && (state.waiting = true)
     }
     return list;
 }
@@ -85,7 +85,7 @@ const updateSearch = (term,field) => {
 function signUp (song) {
     state.freezeList = false;
     let singer = prompt("Your Name: ",'');
-    state.name.push(singer);
+    state.name = singer;
     state.waiting = true;
     state.songs++;
     fetch(`/signup?song=${song}&singer=${singer}`,{method:'GET',connection:'keep-alive'})

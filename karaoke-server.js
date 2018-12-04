@@ -97,11 +97,7 @@ const calcIndex = (str,arr) => arr.filter((e) => e == str).length;
 const updateList = R.curry(function (singer,list) {
     (!checkList(singer.name,pluck('name',list))) ?
 	list.push(singer) :
-<<<<<<< HEAD
 	(checkList(singer.name,flatPluck('name')(host.rounds)) && calcIndex(singer.name,flatPluck('name')(host.rounds)) < host.rounds.length ) ?
-=======
-	(host.rounds.length && checkList(singer.name,flatPluck('name')(host.rounds))) ?
->>>>>>> 025385add70b7b84f155f428d21e11bcf035b921
 	    host.rounds[calcIndex(singer.name,flatPluck('name')(host.rounds))].push(singer) :
 	    host.rounds.push([singer]);
 });
