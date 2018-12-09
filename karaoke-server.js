@@ -69,12 +69,12 @@ function playSong ([singer,...rest]) {
 //	    console.log(`rest: ${rest}\nrounds: ${host.rounds}`);
 	    !rest.length && !host.rounds.length && (host.activeRound = false);
 	    !rest.length && host.rounds.length && setTimeout(function() {host.hermes.publish('next',host.rounds.pop());},10000);
-	    rest.length && setTimeout(function() {host.hermes.publish('next',rest);},10000);
+	    rest.length && host.hermes.publish('next',rest);
 	})
 	.catch((err) => {console.log(err);
 			 !rest.length && !host.rounds.length && (host.activeRound = false);
 			 !rest.length && host.rounds.length && setTimeout(function() {host.hermes.publish('next',host.rounds.pop());},10000);			 
-			 rest.length && setTimeout(function() {host.hermes.publish('next',rest);},10000);
+			 rest.length && host.hermes.publish('next',rest);
 			});
 }
 
@@ -129,7 +129,7 @@ host.activeRound = false;
 host.list = null;
 host.rounds = [];
 host.hermes.subscribe('next',getList);
-host.hermes.subscribe('next',playSong);
+host.hermes.subscribe('next',function (list) {setTimeout(function () {playSong(list);},15000);});
 
 const server = http.createServer((req,res) => {
 
