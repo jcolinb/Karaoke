@@ -7,6 +7,7 @@ body,html {
 
 main {
     width: 100vw;
+    min-height: 100%;
     display: flex;
     background-color: grey;
     flex-direction: column;
@@ -21,10 +22,14 @@ main {
 
 #results {
     padding: 0px;
+    min-height: 70vh;
+    width: 90%;
+    box-sizing: border-box;
+    border: 10px solid black;
     background-image: url('https://proxy.duckduckgo.com/iu/?u=https%3A%2F%2Fmedia.giphy.com%2Fmedia%2FT7VilEdSPfyy4%2Fgiphy.gif&f=1');
     background-repeat: no-repeat;
     background-position: center;
-    background-size: contain;
+    background-size: cover;
 }
 
 li {
@@ -58,6 +63,7 @@ li span {
 #search-control {
     width: 40%;
     display: flex;
+    margin-top: 10px;
     justify-content: space-evenly;
     align-items: center;
 }
