@@ -16,7 +16,7 @@ function buildListItem (song) {
     let cleanSong = snake_case(escapeAmpersand(song));
     if (artist) {
 	let entry = document.createElement('li');
-	entry.innerHTML = (!version) ? `${artist}` : `${version} <span>by</span> ${artist}`;
+	entry.innerHTML = (!version) ? `${artist}` : `<p>${version}</p> <span>by</span> <p>${artist}</p>`;
 	entry.addEventListener('click',() => signUp(cleanSong));
 	results.append(entry);    
     }
@@ -25,8 +25,8 @@ function buildListItem (song) {
 function singerItem (singer,i) {
     if (singer) {
 	let entry = document.createElement('li');
-	i == 0 && (singer = `<span id='green'>${singer}</span>`);
-	i == 1 && (singer = `<span id='red'>${singer}</span>`);
+	i == 0 && (singer = `<span id='green'>${singer}</span> is singing now!`);
+	i == 1 && (singer = `<span id='red'>${singer}</span> is next!`);
 	entry.innerHTML = singer;
 	results.append(entry);
     }
